@@ -1,0 +1,213 @@
+CJ Young
+4/05/2023
+Database Systems - COMP 5120
+
+URL: http://webhome.auburn.edu/~cty0008/
+
+SQL Queries for Term Project
+
+1. Show the subject names of books supplied by *supplier2*.	
+
+SELECT CategoryName
+FROM cty0008db.db_book b, cty0008db.db_supplier s, cty0008db.db_subject c
+WHERE b.SupplierID = s.SupplierID AND b.subjectID = c.subjectID 
+AND s.CompanyName = 'supplier2';
+
+2. Show the name and price of the most expensive book supplied by
+*supplier3*.
+
+SELECT Title, UnitPrice
+FROM cty0008db.db_supplier S, cty0008db.db_book B
+WHERE S.SupplierID = B.SupplierID AND B.UnitPrice = (
+   SELECT MAX(B2.UnitPrice)
+   FROM cty0008db.db_book B2, cty0008db.db_supplier S2
+   WHERE S2.SupplierID = B2.SupplierID AND B2.UnitPrice AND S2.CompanyName = 'supplier3'
+   )
+   
+3. Show the unique names of all books ordered by *lastname1
+firstname1*.
+ 
+SELECT DISTINCT b.Title
+FROM cty0008db.db_book b, cty0008db.db_customer c, cty0008db.db_order o, cty0008db.db_order_detail od
+WHERE c.LastName = "lastname1"
+   AND c. FirstName = "firstname1"
+   AND od.BookID = b.BookID
+   AND od.OrderID = o.OrderID
+   AND c.CustomerID = o.CustomerID;
+
+4. Show the title of books which have more than 10 units in stock.
+
+SELECT b.Title
+FROM cty0008db.db_book b
+Where b.Quantity > 10;
+
+5. Show the total price *lastname1 firstname1* has paid for the books.
+
+ SELECT SUM(b.UnitPrice * od.Quantity)
+FROM cty0008db.db_book b, cty0008db.db_customer c, cty0008db.db_order o, cty0008db.db_order_detail od
+WHERE c.LastName = "lastname1"
+   AND c. FirstName = "firstname1"
+   AND od.BookID = b.BookID
+   AND od.OrderID = o.OrderID
+   AND c.CustomerID = o.CustomerID;
+
+6. Show the names of the customers who have paid less than $80 in
+totals.
+
+SELECT FirstName, LastName
+FROM
+(SELECT c.FirstName as FirstName, c.LastName as LastName, SUM(od.Quantity * b.UnitPrice) AS TotalPrice
+FROM cty0008db.db_book b, cty0008db.db_customer c, cty0008db.db_order o, cty0008db.db_order_detail od
+WHERE od.BookID = b.BookID
+   AND od.OrderID = o.OrderID
+   AND c.CustomerID = o.CustomerID
+  GROUP BY c.customerID HAVING TotalPrice < 80) AS UserTotalPrice;
+
+7. Show the name of books supplied by *supplier2*.
+
+SELECT b.Title
+FROM cty0008db.db_book b, cty0008db.db_supplier s
+WHERE s.SupplierID = b.SupplierID
+	AND s.CompanyName = "supplier2";
+
+8.  Show the total price each customer paid and their names. List the
+result in descending price
+
+SELECT c.FirstName, c.LastName, SUM(od.Quantity*b.UnitPrice) AS TotalPrice 
+FROM cty0008db.db_book b, cty0008db.db_order_detail od, cty0008db.db_order o, cty0008db.db_customer c  
+WHERE od.BookID = b.BookID 
+	AND o.OrderID = od.OrderID 
+	AND c.CustomerID = o.CustomerID 
+GROUP BY c.CustomerID 
+ORDER BY TotalPrice DESC
+
+9.  Show the names of all the books shipped on 08/04/2016 and their
+shippers' names
+
+Select b.Title, sh.ShipperName
+FROM cty0008db.db_book b, cty0008db.db_shipper sh, cty0008db.db_order o, cty0008db.db_order_detail od
+WHERE b.BookID = od.BookID
+	AND o.OrderID = od.OrderID
+    AND o.ShipperID = sh.ShipperID
+    AND ShippedDate = "8/4/2016";
+
+10.  Show the unique names of all the books *lastname1 firstname1* and
+*lastname4 firstname4* *both* ordered.
+
+Select DISTINCT b.Title
+FROM cty0008db.db_book b, cty0008db.db_customer c, cty0008db.db_order o, cty0008db.db_order_detail od
+WHERE LastName = "lastname1" 
+	AND FirstName = "firstname1"
+    AND od.OrderID = o.OrderID
+    AND o.CustomerID = c.CustomerID
+    AND od.BookID = b.BookID
+    AND b.BookID IN
+		(SELECT b2.BookID
+			FROM cty0008db.db_book b2, cty0008db.db_customer c2, cty0008db.db_order o2, cty0008db.db_order_detail od2
+			WHERE LastName = "lastname4" 
+				AND FirstName = "firstname4"
+				AND od2.OrderID = o2.OrderID
+				AND o2.CustomerID = c2.CustomerID
+				AND od2.BookID = b2.BookID);
+
+11. Show the names of all the books *lastname6 firstname6* was
+responsible for 
+
+Select DISTINCT b.Title
+FROM cty0008db.db_book b, cty0008db.db_customer c, cty0008db.db_order o, cty0008db.db_order_detail od, cty0008db.db_employee e
+WHERE od.BookID = b.BookID
+	AND od.OrderID = o.OrderID
+    AND o.EmployeeID = e.EmployeeID
+    AND e.FirstName = 'firstname6'
+    AND e.LastName = 'lastname6';
+
+12. Show the names of all the ordered books and their total
+quantities. List the result in ascending quantity.
+ 
+Select b.Title, od.Quantity
+FROM cty0008db.db_book b, cty0008db.db_order_detail od
+WHERE od.BookID = b.BookID
+	AND b.BookID = od.BookID
+      ORDER BY od.quantity ASC;
+
+13. Show the names of the customers who ordered at least 2 books.
+ 
+Select FirstName, LastName
+	from (select c.FirstName as FirstName, c.LastName as LastName, SUM(od.Quantity) AS TotalBooksBought
+FROM cty0008db.db_order_detail od, cty0008db.db_order o, cty0008db.db_customer c
+WHERE o.OrderID = od.OrderID
+    AND o.CustomerID = c.CustomerID
+    GROUP BY c.CustomerID HAVING TotalBooksBought >= 3) as Pass;
+
+14. Show the name of the customers who have ordered at least a book in
+*category3* or *category4* and the book names.
+
+ SELECT c.FirstName, c.LastName, b.Title 
+FROM cty0008db.db_customer c, cty0008db.db_subject s, cty0008db.db_book b, cty0008db.db_order o, cty0008db.db_order_detail od 
+WHERE o.OrderID = od.OrderID 
+AND b.BookID = od.BookID 
+AND o.CustomerID = c.CustomerID 
+AND b.SubjectID = s.SubjectID 
+AND (s.CategoryName = 'category3' 
+	OR s.CategoryName = 'category4');
+    
+15. Show the name of the customer who has ordered at least one book
+written by *author1*
+
+SELECT c.FirstName, c.LastName 
+FROM cty0008db.db_order o, cty0008db.db_order_detail od, cty0008db.db_customer c, cty0008db.db_book b 
+WHERE o.OrderID = od.OrderID 
+	AND o.CustomerID = c.CustomerID 
+    AND od.BookID = b.BookID 
+    AND b.Author = 'author1';
+
+
+16. Show the name and total sale (price of orders) of each employee.
+
+ SELECT e.FirstName, e.LastName, SUM(b.UnitPrice * od.Quantity) AS PriceOfOrders 
+ FROM cty0008db.db_book b, cty0008db.db_employee e, cty0008db.db_order o, cty0008db.db_order_detail od 
+ WHERE o.OrderID = od.OrderID 
+ AND b.BookID = od.BookID 
+ AND o.EmployeeID = e.EmployeeID 
+ GROUP BY e.EmployeeID;
+
+
+17.  Show the book names and their respective quantities for open
+orders (the orders which have not been shipped) at midnight
+08/04/2016
+
+SELECT b.BookID, sum(od.Quantity) AS Total
+FROM cty0008db.db_order o, cty0008db.db_order_detail od, cty0008db.db_book b
+WHERE o.OrderID = od.OrderID 
+    AND od.BookID = b.BookID 
+    AND (o.ShippedDate is null
+		OR o.ShippedDate > '8/4/2016') GROUP BY b.Title;
+
+18. Show the names of customers who have ordered more than 1 book and
+the corresponding quantities. List the result in the descending
+quantity
+
+ SELECT c.FirstName, c.LastName, SUM(od.Quantity) AS TotalBooksOrdered
+FROM cty0008db.db_customer c, cty0008db.db_order o, cty0008db.db_order_detail od 
+WHERE od.OrderID = o.orderID 
+AND o.CustomerID = c.CustomerID GROUP BY c.CustomerID
+ HAVING TotalBooksOrdered > 1 ORDER BY TotalBooksOrdered DESC
+
+19. Show the names of customers who have ordered more than 3 books and
+their respective telephone numbers.
+
+ SELECT c.FirstName, c.LastName, c.Phone, SUM(od.Quantity) AS TotalBooksOrdered 
+FROM cty0008db.db_customer c, cty0008db.db_order o, cty0008db.db_order_detail od 
+WHERE od.OrderID = o.orderID 
+	AND o.CustomerID = c.CustomerID 
+    GROUP BY c.CustomerID HAVING TotalBooksOrdered >3
+
+    
+    
+
+
+    
+			
+
+
+
