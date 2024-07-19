@@ -24,7 +24,7 @@ function queryHandler($input)
 
     $servername = "sysmysql8.auburn.edu";
     $username = "cty0008";
-    $password = "Greyf@xx200";
+    $password = "Password";
     $dbname = "cty0008db";
 
     // Creates the DB Connection
